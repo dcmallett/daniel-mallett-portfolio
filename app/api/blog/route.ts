@@ -47,24 +47,31 @@ export async function GET() {
 		// Transform the data to a more usable format
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const posts = response.results
-			.map((page: any) => {
-				if (!page.properties) return null;
+			.map((page: unknown) => {
+				// Assert the type of page to access its properties
+				const typedPage = page as {
+					id: string;
+					properties: any;
+					created_time?: string;
+				};
+				if (!typedPage.properties) return null;
 
-				const properties = page.properties;
+				const properties = typedPage.properties;
 
 				return {
-					id: page.id,
+					id: typedPage.id,
 					title: extractTextFromTitle(properties.Title?.title) || "Untitled",
 					summary: extractTextFromRichText(properties.Summary?.rich_text) || "",
 					publishedDate:
 						properties.Published?.date?.start ||
-						page.created_time ||
+						typedPage.created_time ||
 						new Date().toISOString(),
 					tags:
 						properties.Tags?.multi_select?.map(
 							(tag: { name: string }) => tag.name
 						) || [],
-					slug: extractTextFromRichText(properties.Slug?.rich_text) || page.id,
+					slug:
+						extractTextFromRichText(properties.Slug?.rich_text) || typedPage.id,
 					status: properties.Status?.select?.name || "Draft",
 				};
 			})
