@@ -30,41 +30,39 @@ function extractImageUrl(files: any): string {
 	return "";
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractUrl(url: any): string {
+	return url?.url || "";
+}
+
 export async function GET() {
 	try {
 		// Check if Notion is properly configured
-		if (!isNotionConfigured()) {
+		if (!isNotionConfigured() || !DATABASES.PROJECTS) {
 			return NextResponse.json(
-				{ error: "Notion API not configured" },
+				{ error: "Notion Projects API not configured" },
 				{ status: 500 }
 			);
 		}
 
 		// Query the database
 		const response = await notion.databases.query({
-			database_id: DATABASES.BLOG_POSTS,
+			database_id: DATABASES.PROJECTS,
 			sorts: [
 				{
-					property: "Published",
+					property: "Start Date",
 					direction: "descending",
 				},
 			],
-			// Temporarily disabled filter until Status property is properly configured
-			// filter: {
-			// 	property: "Status",
-			// 	select: {
-			// 		equals: "Published",
-			// 	},
-			// },
 		});
 
 		// Transform the data to a more usable format
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const posts = response.results
+		const projects = response.results
 			.map((page: unknown) => {
 				// Assert the type of page to access its properties
 				const typedPage = page as {
 					id: string;
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					properties: any;
 					created_time?: string;
 				};
@@ -74,45 +72,55 @@ export async function GET() {
 
 				return {
 					id: typedPage.id,
-					title:
-						extractTextFromTitle(properties.Title?.title) ||
+					name:
 						extractTextFromTitle(properties.Name?.title) ||
-						"Untitled",
-					summary: extractTextFromRichText(properties.Summary?.rich_text) || "",
-					publishedDate:
-						properties.Published?.date?.start ||
-						typedPage.created_time ||
-						new Date().toISOString(),
-					tags:
-						properties.Tags?.multi_select?.map(
-							(tag: { name: string }) => tag.name
+						extractTextFromTitle(properties.Title?.title) ||
+						"Untitled Project",
+					description:
+						extractTextFromRichText(properties.Description?.rich_text) || "",
+					techStack:
+						properties["Tech Stack"]?.multi_select?.map(
+							(tech: { name: string }) => tech.name
 						) ||
-						properties.Tag?.multi_select?.map(
-							(tag: { name: string }) => tag.name
+						properties.TechStack?.multi_select?.map(
+							(tech: { name: string }) => tech.name
+						) ||
+						properties.Technologies?.multi_select?.map(
+							(tech: { name: string }) => tech.name
 						) ||
 						[],
-					slug:
-						extractTextFromRichText(properties.Slug?.rich_text) || typedPage.id,
-					status: properties.Status?.select?.name || "Draft",
+					status: properties.Status?.select?.name || "In Progress",
+					liveUrl:
+						extractUrl(properties["Live URL"]) ||
+						extractUrl(properties.LiveURL) ||
+						"",
+					githubUrl:
+						extractUrl(properties["GitHub URL"]) ||
+						extractUrl(properties.GitHubURL) ||
+						extractUrl(properties.Repository) ||
+						"",
 					image:
 						extractImageUrl(properties.Image?.files) ||
+						extractImageUrl(properties.Screenshot?.files) ||
 						extractImageUrl(properties.Cover?.files) ||
 						"",
-					profileImage:
-						extractImageUrl(properties.ProfileImage?.files) ||
-						extractImageUrl(properties["Profile Image"]?.files) ||
-						extractImageUrl(properties.AuthorImage?.files) ||
-						extractImageUrl(properties["Author Image"]?.files) ||
+					startDate:
+						properties["Start Date"]?.date?.start ||
+						properties.StartDate?.date?.start ||
+						"",
+					endDate:
+						properties["End Date"]?.date?.start ||
+						properties.EndDate?.date?.start ||
 						"",
 				};
 			})
 			.filter(Boolean);
 
-		return NextResponse.json({ posts }, { status: 200 });
+		return NextResponse.json({ projects }, { status: 200 });
 	} catch (error) {
-		console.error("Error fetching posts from Notion:", error);
+		console.error("Error fetching projects from Notion:", error);
 		return NextResponse.json(
-			{ error: "Failed to fetch posts" },
+			{ error: "Failed to fetch projects" },
 			{ status: 500 }
 		);
 	}
