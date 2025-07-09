@@ -8,8 +8,8 @@ export const notion = new Client({
 // Database IDs (you can add more as needed)
 export const DATABASES = {
 	BLOG_POSTS: process.env.NOTION_DATABASE_ID || "",
-	PROJECTS: process.env.NOTION_PROJECTS_DB_ID || "",
 	// Add more database IDs as needed
+	// PROJECTS: process.env.NOTION_PROJECTS_DB_ID || '',
 	// EXPERIENCE: process.env.NOTION_EXPERIENCE_DB_ID || '',
 };
 

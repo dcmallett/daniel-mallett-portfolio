@@ -2,62 +2,151 @@
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import type { BlogPost } from "@/types/notion";
+
+const posts = {
+	"nextjs-portfolio": {
+		title: "Why I Built My Portfolio with Next.js",
+		date: "December 15, 2024",
+		readTime: "5 min read",
+		tags: ["Next.js", "React", "Tailwind CSS", "Portfolio"],
+		content: `
+			Building a modern developer portfolio requires careful consideration of both aesthetics and functionality. When I decided to rebuild my portfolio from scratch, I knew I wanted something that would showcase not just my projects, but also my technical skills and attention to detail.
+
+			## Why Next.js?
+
+			Next.js has become my go-to framework for React applications, and here's why it was perfect for my portfolio:
+
+			**Server-Side Rendering (SSR)**: My portfolio loads incredibly fast thanks to Next.js's built-in SSR capabilities. This means better SEO and faster initial page loads.
+
+			**File-based Routing**: The intuitive routing system made organizing my portfolio sections effortless. Each page and dynamic route just works out of the box.
+
+			**Image Optimization**: The built-in Image component automatically optimizes images for different screen sizes and formats, ensuring my portfolio looks great everywhere.
+
+			## The Design Philosophy
+
+			I wanted my portfolio to be clean, modern, and focused on content. Tailwind CSS was the perfect choice because:
+
+			- **Utility-first approach**: Rapid prototyping and consistent spacing
+			- **Responsive design**: Mobile-first design that scales beautifully
+			- **Custom theming**: Easy to maintain a consistent color scheme
+
+			## Performance Considerations
+
+			Performance was a top priority. I implemented several optimizations:
+
+			- **Lazy loading** for images and components
+			- **Code splitting** to reduce bundle sizes
+			- **Optimized fonts** using Next.js font optimization
+			- **Static generation** where possible for lightning-fast loads
+
+			The result is a portfolio that scores 100/100 on Google PageSpeed Insights and provides an excellent user experience across all devices.
+		`,
+	},
+	"keep-learning": {
+		title: "How to Keep Learning as a Developer",
+		date: "December 10, 2024",
+		readTime: "7 min read",
+		tags: ["Learning", "Career", "Development", "Growth"],
+		content: `
+			The tech industry evolves at breakneck speed. New frameworks, languages, and best practices emerge constantly. As developers, our ability to learn continuously isn't just beneficial—it's essential for survival and growth in this field.
+
+			## The Learning Mindset
+
+			First and foremost, cultivate curiosity. Every bug is a learning opportunity. Every new project is a chance to try something different. I've found that the most successful developers I know share one trait: they're genuinely excited about learning new things.
+
+			## Structured Learning Approaches
+
+			### 1. Project-Based Learning
+			Don't just read about new technologies—build with them. When I wanted to learn TypeScript, I didn't just read the docs. I rebuilt one of my existing projects using TypeScript, which taught me the practical benefits and challenges.
+
+			### 2. Community Engagement
+			Join developer communities, attend meetups, and participate in online discussions. Some of my best learning experiences have come from:
+			- **Discord servers** for specific technologies
+			- **Local meetups** and conferences
+			- **Open source contributions**
+			- **Tech Twitter** discussions
+
+			### 3. Teaching Others
+			Write blog posts, create tutorials, or mentor junior developers. Teaching forces you to truly understand concepts and often reveals gaps in your knowledge.
+
+			## Staying Current
+
+			I follow a few strategies to stay updated:
+
+			**Weekly Learning Time**: I dedicate 2-3 hours every week specifically to learning something new or deepening existing knowledge.
+
+			**Curated Content**: I follow key influencers and subscribe to newsletters like JavaScript Weekly and React Status.
+
+			**Hands-on Experiments**: I maintain a "playground" repository where I experiment with new tools and techniques.
+
+			Remember: you don't need to learn everything, but you should always be learning something.
+		`,
+	},
+	"frontend-vs-backend": {
+		title: "Backend vs Frontend: My Journey",
+		date: "December 5, 2024",
+		readTime: "6 min read",
+		tags: ["Full Stack", "Backend", "Frontend", "Career"],
+		content: `
+			I often get asked whether I prefer frontend or backend development. The truth is, I've found immense value in both, and my journey across the stack has shaped me into a more well-rounded developer.
+
+			## My Backend Beginnings
+
+			I started my career primarily focused on backend development. There's something deeply satisfying about architecting systems, designing APIs, and solving complex data problems. Backend development taught me:
+
+			**Systems Thinking**: Understanding how different components interact and scale
+			**Data Modeling**: Designing efficient database schemas and relationships
+			**Performance Optimization**: Writing efficient queries and optimizing server resources
+			**Security Mindset**: Implementing authentication, authorization, and data protection
+
+			Working with technologies like Node.js, PostgreSQL, and Redis gave me a solid foundation in how applications actually work under the hood.
+
+			## The Frontend Transition
+
+			As I grew in my career, I found myself increasingly drawn to the frontend. There's an immediate gratification in frontend work—you can see your changes instantly, and the user experience is tangible. Frontend development opened my eyes to:
+
+			**User Experience**: How small design decisions can dramatically impact usability
+			**Performance from a User's Perspective**: Optimizing for perceived performance, not just server metrics
+			**Accessibility**: Building applications that work for everyone
+			**Modern Tooling**: The incredible ecosystem of tools that make frontend development powerful
+
+			React, TypeScript, and modern CSS have become some of my favorite tools to work with.
+
+			## The Full Stack Advantage
+
+			Being comfortable with both sides of the stack has been incredibly valuable:
+
+			### Better Communication
+			I can speak the language of both frontend and backend teams, which makes collaboration smoother and more effective.
+
+			### End-to-End Problem Solving
+			When debugging issues, I can trace problems from the UI all the way down to the database, which speeds up resolution times significantly.
+
+			### Architecture Decisions
+			Understanding both perspectives helps me make better decisions about API design, data flow, and application architecture.
+
+			## Where I Find Joy
+
+			If I'm being honest, I find the most joy in the intersection between frontend and backend—building APIs that are a pleasure to work with, optimizing data flow between client and server, and creating seamless user experiences that are powered by robust backend systems.
+
+			The modern web is about bringing these two worlds together, and I love being able to contribute to both sides of that equation.
+		`,
+	},
+};
 
 export default function BlogPostPage() {
-	const params = useParams();
-	const [post, setPost] = useState<BlogPost | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const { id } = useParams();
+	const post = posts[id as keyof typeof posts];
 
-	useEffect(() => {
-		async function fetchPost() {
-			try {
-				const response = await fetch("/api/blog");
-				if (!response.ok) {
-					throw new Error("Failed to fetch posts");
-				}
-				const data = await response.json();
-				const foundPost = data.posts.find(
-					(p: BlogPost) => p.slug === params.id || p.id === params.id
-				);
-
-				if (!foundPost) {
-					throw new Error("Post not found");
-				}
-
-				setPost(foundPost);
-			} catch (err) {
-				setError(err instanceof Error ? err.message : "An error occurred");
-			} finally {
-				setLoading(false);
-			}
-		}
-
-		if (params.id) {
-			fetchPost();
-		}
-	}, [params.id]);
-
-	if (loading) {
+	if (!post) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
 				<motion.div
-					animate={{ rotate: 360 }}
-					transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-					className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"
-				/>
-			</div>
-		);
-	}
-
-	if (error || !post) {
-		return (
-			<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
-				<div className="text-center">
-					<h1 className="text-4xl font-bold text-gray-900 mb-4">
+					initial={{ opacity: 0, scale: 0.9 }}
+					animate={{ opacity: 1, scale: 1 }}
+					className="text-center"
+				>
+					<h1 className="text-4xl font-bold text-gray-800 mb-4">
 						Post Not Found
 					</h1>
 					<p className="text-gray-600 mb-8">
@@ -65,370 +154,162 @@ export default function BlogPostPage() {
 					</p>
 					<Link
 						href="/blogs"
-						className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+						className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
 					>
-						← Back to Blog
+						Back to Blog
 					</Link>
-				</div>
+				</motion.div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-white">
-			{/* Hero Section */}
-			<div className="relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-				<div className="absolute inset-0 opacity-10">
-					<div className="absolute inset-0 bg-black opacity-20"></div>
-					<div
-						className="h-full w-full"
-						style={{
-							backgroundImage:
-								"radial-gradient(circle at 2px 2px, rgba(255,255,255,0.2) 1px, transparent 0)",
-							backgroundSize: "30px 30px",
-						}}
-					></div>
-				</div>
-				<div className="relative container mx-auto px-4 py-12 md:py-16">
-					<motion.div
-						initial={{ opacity: 0, y: 30 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.8 }}
-						className="max-w-4xl mx-auto"
-					>
-						{/* Back Button */}
-						<Link
-							href="/blogs"
-							className="inline-flex items-center text-slate-300 hover:text-white mb-6 transition-colors group text-sm"
-						>
-							<svg
-								className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M15 19l-7-7 7-7"
-								/>
-							</svg>
-							Back to Blog
-						</Link>
-
-						{/* Author Info */}
-						<motion.div
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.8, delay: 0.1 }}
-							className="flex items-center mb-6"
-						>
-							{post.profileImage ? (
-								<div className="w-10 h-10 rounded-full overflow-hidden mr-3 ring-2 ring-white/20">
-									<Image
-										src={post.profileImage}
-										alt="Daniel Mallett"
-										width={40}
-										height={40}
-										className="object-cover w-full h-full"
-									/>
-								</div>
-							) : (
-								<div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-									<span className="text-white font-semibold text-sm">DM</span>
-								</div>
-							)}
-							<div>
-								<p className="text-white font-medium text-sm">Daniel Mallett</p>
-								<p className="text-slate-300 text-xs">Full Stack Developer</p>
-							</div>
-						</motion.div>
-
-						{/* Title */}
-						<motion.h1
-							initial={{ opacity: 0, y: 30 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.8, delay: 0.2 }}
-							className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight"
-						>
-							{post.title}
-						</motion.h1>
-
-						{/* Tags */}
-						{post.tags && post.tags.length > 0 && (
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ duration: 0.8, delay: 0.3 }}
-								className="flex flex-wrap gap-2 mb-6"
-							>
-								{post.tags.map((tag, index) => (
-									<span
-										key={index}
-										className="px-3 py-1 bg-white/10 backdrop-blur-sm text-white rounded-full text-xs font-medium border border-white/20"
-									>
-										{tag}
-									</span>
-								))}
-							</motion.div>
-						)}
-
-						{/* Date and Reading Time */}
-						<motion.div
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.8, delay: 0.4 }}
-							className="flex flex-wrap items-center text-slate-300 gap-4 text-sm"
-						>
-							<div className="flex items-center">
-								<svg
-									className="w-4 h-4 mr-2"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-									/>
-								</svg>
-								<time>
-									{new Date(post.publishedDate).toLocaleDateString("en-US", {
-										year: "numeric",
-										month: "long",
-										day: "numeric",
-									})}
-								</time>
-							</div>
-							<div className="flex items-center">
-								<svg
-									className="w-4 h-4 mr-2"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-									/>
-								</svg>
-								<span>
-									{Math.max(1, Math.ceil((post.summary?.length || 200) / 200))}{" "}
-									min read
-								</span>
-							</div>
-						</motion.div>
-					</motion.div>
-				</div>
-			</div>
-
-			{/* Featured Image Section */}
-			<div className="container mx-auto px-4 -mt-6 relative z-10">
+		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+			<div className="container mx-auto px-6 py-12 max-w-4xl">
+				{/* Back Button */}
 				<motion.div
-					initial={{ opacity: 0, y: 30 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.8, delay: 0.4 }}
-					className="max-w-4xl mx-auto"
+					initial={{ opacity: 0, x: -20 }}
+					animate={{ opacity: 1, x: 0 }}
+					transition={{ duration: 0.5 }}
 				>
-					{post.image ? (
-						<div className="relative h-72 md:h-80 lg:h-96 rounded-xl overflow-hidden shadow-2xl">
-							<Image
-								src={post.image}
-								alt={post.title}
-								fill
-								className="object-cover"
-								sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-								priority
+					<Link
+						href="/blogs"
+						className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8 group"
+					>
+						<motion.svg
+							className="mr-2 w-4 h-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							animate={{ x: [-2, 0, -2] }}
+							transition={{
+								duration: 1.5,
+								repeat: Infinity,
+								repeatType: "loop",
+								ease: "easeInOut",
+							}}
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M15 19l-7-7 7-7"
 							/>
-							<div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
-						</div>
-					) : (
-						<div className="relative h-56 md:h-72 rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-slate-100 to-slate-200">
-							<div className="absolute inset-0 flex items-center justify-center">
-								<div className="text-center">
-									<svg
-										className="w-16 h-16 text-slate-400 mx-auto mb-4"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={1.5}
-											d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-										/>
-									</svg>
-									<p className="text-slate-500 font-medium">Featured Image</p>
-									<p className="text-slate-400 text-sm">Coming Soon</p>
-								</div>
-							</div>
-							<div className="absolute inset-0 bg-gradient-to-br from-slate-500/5 to-slate-600/10" />
-						</div>
-					)}
+						</motion.svg>
+						<span className="font-medium">Back to Blog</span>
+					</Link>
 				</motion.div>
-			</div>
 
-			{/* Main Content */}
-			<div className="container mx-auto px-4 py-8">
-				<motion.div
-					initial={{ opacity: 0, y: 30 }}
+				{/* Article Header */}
+				<motion.header
+					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.8, delay: 0.4 }}
-					className="max-w-4xl mx-auto"
+					transition={{ duration: 0.6, delay: 0.1 }}
+					className="mb-12"
 				>
-					{/* Article Content */}
-					<article className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
-						{/* Summary Section */}
-						{post.summary && (
-							<div className="bg-gradient-to-r from-slate-50 to-blue-50 px-8 md:px-12 py-8 border-b border-slate-200">
-								<div className="flex items-start space-x-4">
-									<div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-										<svg
-											className="w-5 h-5 text-blue-600"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-											/>
-										</svg>
-									</div>
-									<div className="flex-1">
-										<h2 className="text-lg font-semibold text-slate-900 mb-3">
-											Summary
-										</h2>
-										<p className="text-slate-600 text-base leading-relaxed">
-											{post.summary}
-										</p>
-									</div>
-								</div>
-							</div>
-						)}
-
-						{/* Main Content */}
-						<div className="px-8 md:px-12 py-10">
-							<div className="prose prose-lg prose-slate max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-p:text-slate-700 prose-p:leading-relaxed">
-								<div className="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-lg mb-8">
-									<div className="flex items-start">
-										<svg
-											className="w-6 h-6 text-amber-600 mr-3 mt-0.5 flex-shrink-0"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-											/>
-										</svg>
-										<div>
-											<h3 className="text-amber-800 font-semibold mb-2">
-												Content Coming Soon
-											</h3>
-											<p className="text-amber-700 text-sm">
-												Full blog content parsing is currently being developed.
-												For now, you can read the summary above.
-											</p>
-										</div>
-									</div>
-								</div>
-
-								{/* Placeholder content - in a real implementation, this would be the parsed Notion content */}
-								<div className="space-y-6 text-slate-700 leading-relaxed">
-									<p>
-										This is where the full blog content would appear once we
-										implement Notion content parsing. The content would be rich
-										text with proper formatting, images, code blocks, and more.
-									</p>
-									<div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-										<p className="text-slate-600 italic">
-											&quot;The summary above provides a preview of what this
-											post covers. Full content rendering from Notion blocks
-											will be implemented in a future update.&quot;
-										</p>
-									</div>
-								</div>
-							</div>
-						</div>
-					</article>
-
-					{/* Navigation & Actions */}
+					{/* Tags */}
 					<motion.div
-						initial={{ opacity: 0, y: 30 }}
+						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.8, delay: 0.6 }}
-						className="mt-12 flex flex-col sm:flex-row gap-4 justify-between items-center"
+						transition={{ duration: 0.5, delay: 0.2 }}
+						className="flex flex-wrap gap-2 mb-6"
 					>
-						<Link
-							href="/blogs"
-							className="inline-flex items-center px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-all duration-200 group shadow-md hover:shadow-lg"
-						>
-							<svg
-								className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
+						{post.tags.map((tag, index) => (
+							<motion.span
+								key={tag}
+								initial={{ opacity: 0, scale: 0.8 }}
+								animate={{ opacity: 1, scale: 1 }}
+								transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
+								className="px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full"
 							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M15 19l-7-7 7-7"
-								/>
-							</svg>
-							Back to All Posts
-						</Link>
-
-						<div className="flex gap-3">
-							<button className="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
-								<svg
-									className="w-4 h-4 mr-2"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-									/>
-								</svg>
-								Share
-							</button>
-							<Link
-								href="/contact"
-								className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-							>
-								<svg
-									className="w-4 h-4 mr-2"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-									/>
-								</svg>
-								Discuss
-							</Link>
-						</div>
+								{tag}
+							</motion.span>
+						))}
 					</motion.div>
+
+					{/* Title */}
+					<motion.h1
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.6, delay: 0.3 }}
+						className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 leading-tight"
+					>
+						{post.title}
+					</motion.h1>
+
+					{/* Meta Information */}
+					<motion.div
+						initial={{ opacity: 0, y: 10 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.5, delay: 0.4 }}
+						className="flex items-center text-gray-600 text-sm"
+					>
+						<span className="mr-4">{post.date}</span>
+						<span className="mr-4">•</span>
+						<span>{post.readTime}</span>
+					</motion.div>
+
+					{/* Gradient Line */}
+					<motion.div
+						initial={{ scaleX: 0 }}
+						animate={{ scaleX: 1 }}
+						transition={{ duration: 0.8, delay: 0.5 }}
+						className="h-1 bg-gradient-to-r from-blue-500 to-blue-700 w-24 mt-8 rounded-full"
+					/>
+				</motion.header>
+
+				{/* Article Content */}
+				<motion.article
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.6, delay: 0.6 }}
+					className="bg-white rounded-2xl shadow-lg p-8 md:p-12"
+				>
+					<div
+						className="prose prose-lg max-w-none
+							prose-headings:text-gray-800 prose-headings:font-bold
+							prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-6
+							prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4
+							prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6
+							prose-strong:text-gray-800 prose-strong:font-semibold
+							prose-ul:my-6 prose-li:my-2
+							prose-code:bg-blue-100 prose-code:text-blue-800 prose-code:px-2 prose-code:py-1 prose-code:rounded"
+						dangerouslySetInnerHTML={{
+							__html: post.content
+								.replace(/\n\t\t\t/g, "\n")
+								.replace(/## /g, "<h2>")
+								.replace(/### /g, "<h3>")
+								.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+								.replace(/- \*\*(.*?)\*\*:/g, "<li><strong>$1</strong>:</li>")
+								.replace(/- /g, "<li>")
+								.replace(/\n\n/g, "</p><p>")
+								.replace(/^/, "<p>")
+								.replace(/$/, "</p>")
+								.replace(/<p><h/g, "<h")
+								.replace(/<\/h([1-6])><\/p>/g, "</h$1>")
+								.replace(/<p><li>/g, "<ul><li>")
+								.replace(/<\/li><\/p>/g, "</li></ul>")
+								.replace(/<\/ul><ul>/g, ""),
+						}}
+					/>
+				</motion.article>
+
+				{/* Navigation */}
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.6, delay: 0.7 }}
+					className="mt-12 text-center"
+				>
+					<Link href="/blogs">
+						<motion.button
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}
+							className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-shadow duration-300"
+						>
+							Read More Posts
+						</motion.button>
+					</Link>
 				</motion.div>
 			</div>
 		</div>

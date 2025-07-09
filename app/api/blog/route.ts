@@ -17,19 +17,6 @@ function extractTextFromTitle(title: any): string {
 	return "";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractImageUrl(files: any): string {
-	if (Array.isArray(files) && files.length > 0) {
-		const file = files[0];
-		if (file.type === "external") {
-			return file.external?.url || "";
-		} else if (file.type === "file") {
-			return file.file?.url || "";
-		}
-	}
-	return "";
-}
-
 export async function GET() {
 	try {
 		// Check if Notion is properly configured
@@ -45,17 +32,16 @@ export async function GET() {
 			database_id: DATABASES.BLOG_POSTS,
 			sorts: [
 				{
-					property: "Published",
+					property: "Created",
 					direction: "descending",
 				},
 			],
-			// Temporarily disabled filter until Status property is properly configured
-			// filter: {
-			// 	property: "Status",
-			// 	select: {
-			// 		equals: "Published",
-			// 	},
-			// },
+			filter: {
+				property: "Status",
+				select: {
+					equals: "Published",
+				},
+			},
 		});
 
 		// Transform the data to a more usable format
@@ -74,10 +60,7 @@ export async function GET() {
 
 				return {
 					id: typedPage.id,
-					title:
-						extractTextFromTitle(properties.Title?.title) ||
-						extractTextFromTitle(properties.Name?.title) ||
-						"Untitled",
+					title: extractTextFromTitle(properties.Title?.title) || "Untitled",
 					summary: extractTextFromRichText(properties.Summary?.rich_text) || "",
 					publishedDate:
 						properties.Published?.date?.start ||
@@ -86,24 +69,10 @@ export async function GET() {
 					tags:
 						properties.Tags?.multi_select?.map(
 							(tag: { name: string }) => tag.name
-						) ||
-						properties.Tag?.multi_select?.map(
-							(tag: { name: string }) => tag.name
-						) ||
-						[],
+						) || [],
 					slug:
 						extractTextFromRichText(properties.Slug?.rich_text) || typedPage.id,
 					status: properties.Status?.select?.name || "Draft",
-					image:
-						extractImageUrl(properties.Image?.files) ||
-						extractImageUrl(properties.Cover?.files) ||
-						"",
-					profileImage:
-						extractImageUrl(properties.ProfileImage?.files) ||
-						extractImageUrl(properties["Profile Image"]?.files) ||
-						extractImageUrl(properties.AuthorImage?.files) ||
-						extractImageUrl(properties["Author Image"]?.files) ||
-						"",
 				};
 			})
 			.filter(Boolean);

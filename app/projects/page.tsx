@@ -1,11 +1,19 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
-import type { Project } from "@/types/notion";
 
-const tabs = ["All", "Completed", "In Progress"] as const;
+const tabs = ["Frontend", "Backend", "Fullstack"] as const;
 type Tab = (typeof tabs)[number];
+
+interface Project {
+	title: string;
+	description: string;
+	technologies: string[];
+	github?: string;
+	demo?: string;
+	image?: string;
+	featured?: boolean;
+}
 
 const projectData: Record<Tab, Project[]> = {
 	Frontend: [
