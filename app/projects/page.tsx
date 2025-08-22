@@ -1,103 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Project } from "@/types/notion";
 
 const tabs = ["Frontend", "Backend", "Fullstack"] as const;
 type Tab = (typeof tabs)[number];
-
-interface Project {
-	title: string;
-	description: string;
-	technologies: string[];
-	github?: string;
-	demo?: string;
-	image?: string;
-	featured?: boolean;
-}
-
-const projectData: Record<Tab, Project[]> = {
-	Frontend: [
-		{
-			title: "Portfolio Website",
-			description:
-				"A sleek, modern personal portfolio showcasing my work with beautiful animations and responsive design. Built with performance and user experience in mind.",
-			technologies: [
-				"Next.js",
-				"React",
-				"Tailwind CSS",
-				"Framer Motion",
-				"TypeScript",
-			],
-			github: "https://github.com/danielmallett/portfolio",
-			demo: "https://danielmallett.dev",
-			featured: true,
-		},
-		{
-			title: "E-Commerce Landing Page",
-			description:
-				"High-converting landing page for a SaaS product with advanced animations, optimized for conversions and mobile-first design.",
-			technologies: ["React", "Tailwind CSS", "Framer Motion", "Vite"],
-			github: "https://github.com/danielmallett/landing",
-			demo: "https://landing-demo.vercel.app",
-		},
-		{
-			title: "Weather Dashboard",
-			description:
-				"Beautiful weather application with real-time data, interactive charts, and location-based forecasting.",
-			technologies: ["React", "Chart.js", "OpenWeather API", "CSS Modules"],
-			github: "https://github.com/danielmallett/weather",
-			demo: "https://weather-app-demo.vercel.app",
-		},
-	],
-	Backend: [
-		{
-			title: "RESTful API Service",
-			description:
-				"Scalable RESTful API with advanced authentication, rate limiting, and comprehensive documentation. Handles 10k+ requests per minute.",
-			technologies: ["Node.js", "Express", "PostgreSQL", "Redis", "JWT"],
-			github: "https://github.com/danielmallett/api-service",
-			featured: true,
-		},
-		{
-			title: "Real-time Chat System",
-			description:
-				"High-performance chat application with WebSocket connections, message persistence, and user presence indicators.",
-			technologies: ["Node.js", "Socket.io", "MongoDB", "Express"],
-			github: "https://github.com/danielmallett/chat-system",
-		},
-		{
-			title: "Authentication Microservice",
-			description:
-				"Robust authentication system with JWT tokens, role-based access control, and OAuth integration.",
-			technologies: ["Node.js", "Express", "PostgreSQL", "JWT", "OAuth"],
-			github: "https://github.com/danielmallett/auth-service",
-		},
-	],
-	Fullstack: [
-		{
-			title: "Project Management Platform",
-			description:
-				"Comprehensive project management tool with real-time collaboration, task tracking, and team analytics. Built for modern teams.",
-			technologies: [
-				"Next.js",
-				"Node.js",
-				"PostgreSQL",
-				"Socket.io",
-				"Tailwind CSS",
-			],
-			github: "https://github.com/danielmallett/project-manager",
-			demo: "https://pm-platform-demo.vercel.app",
-			featured: true,
-		},
-		{
-			title: "Social Media Dashboard",
-			description:
-				"Analytics dashboard for social media management with data visualization, scheduled posting, and engagement tracking.",
-			technologies: ["React", "Node.js", "MongoDB", "Chart.js", "Express"],
-			github: "https://github.com/danielmallett/social-dashboard",
-		},
-	],
-};
 
 const tabIcons = {
 	Frontend: (
@@ -149,6 +56,98 @@ const tabIcons = {
 
 export default function ProjectsPage() {
 	const [activeTab, setActiveTab] = useState<Tab>("Frontend");
+	const [projects, setProjects] = useState<Project[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const fetchProjects = async () => {
+			try {
+				setLoading(true);
+				console.log("Fetching projects from /api/projects...");
+				const response = await fetch("/api/projects");
+
+				console.log("Response status:", response.status);
+				console.log("Response ok:", response.ok);
+
+				if (!response.ok) {
+					const errorText = await response.text();
+					console.log("Error response:", errorText);
+
+					// If it's a Notion configuration error, show helpful message
+					if (response.status === 500) {
+						throw new Error(`Notion API Error: ${errorText}. 
+
+Possible fixes:
+1. Check your Notion database has the right properties
+2. Make sure your integration has access to the database
+3. Verify you have projects with Status="Published"`);
+					}
+
+					throw new Error(
+						`Failed to fetch projects: ${response.status} - ${errorText}`
+					);
+				}
+
+				const data = await response.json();
+				console.log("Fetched projects:", data);
+				setProjects(data);
+			} catch (err) {
+				console.error("Full error:", err);
+				setError(
+					err instanceof Error ? err.message : "Failed to load projects"
+				);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchProjects();
+	}, []);
+
+	// Group projects by category
+	const projectData: Record<Tab, Project[]> = {
+		Frontend: projects.filter((p) => p.category === "Frontend"),
+		Backend: projects.filter((p) => p.category === "Backend"),
+		Fullstack: projects.filter((p) => p.category === "Fullstack"),
+	};
+
+	// Show loading state
+	if (loading) {
+		return (
+			<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+				<div className="text-center">
+					<motion.div
+						animate={{ rotate: 360 }}
+						transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+						className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"
+					/>
+					<p className="text-gray-600">Loading projects...</p>
+				</div>
+			</div>
+		);
+	}
+
+	// Show error state
+	if (error) {
+		return (
+			<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+				<div className="text-center">
+					<div className="text-red-500 text-6xl mb-4">⚠️</div>
+					<h2 className="text-2xl font-bold text-gray-800 mb-2">
+						Failed to load projects
+					</h2>
+					<p className="text-gray-600 mb-4">{error}</p>
+					<button
+						onClick={() => window.location.reload()}
+						className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+					>
+						Try Again
+					</button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
