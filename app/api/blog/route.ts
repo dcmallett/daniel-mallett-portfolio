@@ -17,6 +17,28 @@ function extractTextFromTitle(title: any): string {
 	return "";
 }
 
+// Type for Notion properties
+interface NotionProperties {
+	Name?: {
+		title?: Array<{ plain_text: string }>;
+	};
+	Summary?: {
+		rich_text?: Array<{ plain_text: string }>;
+	};
+	Published?: {
+		date?: { start: string };
+	};
+	Tag?: {
+		multi_select?: Array<{ name: string }>;
+	};
+	Slug?: {
+		rich_text?: Array<{ plain_text: string }>;
+	};
+	Status?: {
+		status?: { name: string };
+	};
+}
+
 export async function GET() {
 	try {
 		// Check if Notion is properly configured
@@ -32,26 +54,25 @@ export async function GET() {
 			database_id: DATABASES.BLOG_POSTS,
 			sorts: [
 				{
-					property: "Created",
+					property: "Published",
 					direction: "descending",
 				},
 			],
 			filter: {
 				property: "Status",
-				select: {
+				status: {
 					equals: "Published",
 				},
 			},
 		});
 
 		// Transform the data to a more usable format
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const posts = response.results
 			.map((page: unknown) => {
 				// Assert the type of page to access its properties
 				const typedPage = page as {
 					id: string;
-					properties: any;
+					properties: NotionProperties;
 					created_time?: string;
 				};
 				if (!typedPage.properties) return null;
@@ -60,19 +81,19 @@ export async function GET() {
 
 				return {
 					id: typedPage.id,
-					title: extractTextFromTitle(properties.Title?.title) || "Untitled",
+					title: extractTextFromTitle(properties.Name?.title) || "Untitled",
 					summary: extractTextFromRichText(properties.Summary?.rich_text) || "",
 					publishedDate:
 						properties.Published?.date?.start ||
 						typedPage.created_time ||
 						new Date().toISOString(),
 					tags:
-						properties.Tags?.multi_select?.map(
+						properties.Tag?.multi_select?.map(
 							(tag: { name: string }) => tag.name
 						) || [],
 					slug:
 						extractTextFromRichText(properties.Slug?.rich_text) || typedPage.id,
-					status: properties.Status?.select?.name || "Draft",
+					status: properties.Status?.status?.name || "Draft",
 				};
 			})
 			.filter(Boolean);
