@@ -3,13 +3,10 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Resume from "../components/Resume/Resume";
-import Header from "@/components/Header/Header";
 
 export default function HomePage() {
 	return (
 		<div className="bg-white text-gray-900 container-xl max-w-full mx-auto">
-			<Header />
-
 			<main className="container mx-auto p-4 space-y-12">
 				<motion.section
 					initial={{ opacity: 0, y: 20 }}
