@@ -43,9 +43,43 @@ export async function GET() {
 	try {
 		// Check if Notion is properly configured
 		if (!isNotionConfigured()) {
+			// Return fallback data instead of error
 			return NextResponse.json(
-				{ error: "Notion API not configured" },
-				{ status: 500 }
+				{
+					posts: [
+						{
+							id: "nextjs-portfolio",
+							title: "Why I Built My Portfolio with Next.js",
+							summary:
+								"A deep dive into building a fast, modern developer portfolio with Next.js and Tailwind CSS.",
+							publishedDate: new Date().toISOString(),
+							tags: ["Next.js", "Portfolio"],
+							slug: "nextjs-portfolio",
+							status: "Published",
+						},
+						{
+							id: "keep-learning",
+							title: "How to Keep Learning as a Developer",
+							summary:
+								"Tips and strategies for continuous improvement and staying current in tech.",
+							publishedDate: new Date().toISOString(),
+							tags: ["Learning", "Career"],
+							slug: "keep-learning",
+							status: "Published",
+						},
+						{
+							id: "frontend-vs-backend",
+							title: "Backend vs Frontend: My Journey",
+							summary:
+								"My experience working across the full stack and what I've learned from both sides.",
+							publishedDate: new Date().toISOString(),
+							tags: ["Full Stack", "Career"],
+							slug: "frontend-vs-backend",
+							status: "Published",
+						},
+					],
+				},
+				{ status: 200 }
 			);
 		}
 
