@@ -1,1 +1,56 @@
 @import "tailwindcss";
+
+/* Dark mode styles */
+html {
+	scroll-behavior: smooth;
+}
+
+.dark {
+	color-scheme: dark;
+}
+
+/* Flip card styles */
+.flip-card-container {
+	perspective: 1000px;
+}
+
+.flip-card-face {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+
+/* Custom animations */
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-10px);
+	}
+}
+
+.animate-float {
+	animation: float 3s ease-in-out infinite;
+}
+
+/* Micro-interactions */
+.micro-bounce:hover {
+	animation: micro-bounce 0.3s ease-in-out;
+}
+
+@keyframes micro-bounce {
+	0%,
+	100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.05);
+	}
+}
+
+/* Smooth transitions for theme changes */
+* {
+	transition: background-color 0.3s ease, color 0.3s ease,
+		border-color 0.3s ease;
+}
